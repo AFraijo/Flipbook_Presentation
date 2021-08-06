@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>Creating Time Series Plots in ggPlot2</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Andrew Fraijo" />
+    <link href="libs/remark-css-0.0.1/shinobi.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/ninjutsu.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Creating Time Series Plots in ggPlot2
+## A Flipbook
+### Andrew Fraijo
+### 2019/7/1 (updated: 2019-07-16)
+
+---
+
+
+# Introduction
+
+The R package ggplot2 is an implementation of the "layered grammar of graphics", orginally proposed by Leland Wilkinson in 2005 and implemented by Hadley Wickham. Hadley, the folks at RStudio, and the wider R community, continue to develop ggplot2 (in the R community if you use the name Hadley, the default presumption is you mean Hadley Wickham. He is kind of a big deal). Originally intended to create create graphics that were ready to be published in statistical journals, ggplot2 is widely used by the R community. In Python the packages ggplot and plotnine are direct ports of ggplot2. 
+
+The structure of creating a ggplot figure is not always easy to understand, particularly when plotting time-series. In this flipbook, I will walk you through creating a variety of time-series plots using ggplot2.
+
+---
+# Acknowledgement
+
+Most of this was built off of work provided by Gina Reynolds. You can find her Flipbook library and code here: https://github.com/EvaMaeRey/little_flipbooks_library.
+
+---
+#Data and Packages
+
+We will be using data that represents the number of server failures per hour over a 3 year period. In addition to ggplot2, we use the tools of the Tidyverse, created by Hadley Wickham (he's very busy) to encourage tidy data analysis, and the tidy time-series package tsibble. 
+
+
+```r
+library(tidyverse)
+library(tsibble)
+library(readr)
+Fail_tsbl &lt;- read_rds("Data For Flipbook.RDS")
+```
+
+---
+# Data and Packages
+
+Below is the first 10 observations from the dataset. You can see that the data includes a time-stamp, the number of failures at that time, the Weekday, and the hour of the day. The last two variables are useful for certain graphs we will create:
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Date_time &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Failures &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; WkDay &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Hour &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2006-01-03 07:00:00 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 8 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Tue &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 7 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2006-01-03 08:00:00 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Tue &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 8 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2006-01-03 09:00:00 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Tue &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 9 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2006-01-03 10:00:00 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Tue &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 10 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2006-01-03 11:00:00 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Tue &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 11 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2006-01-03 12:00:00 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Tue &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 12 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2006-01-03 13:00:00 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Tue &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 13 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2006-01-03 14:00:00 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Tue &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 14 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2006-01-03 15:00:00 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 10 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Tue &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 15 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2006-01-03 16:00:00 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Tue &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 16 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+---
+# Straight Forward Time-Series
+
+Our first plot will be a straight forward time-series plot, where one line connects each data point. The output we are aiming for is:
+
+&lt;img src="Flipbook_files/figure-html/Time-Series-1.png" style="display: block; margin: auto;" /&gt;
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+*ggplot(data = Fail_tsbl)
+```
+]]
+.column[.content.center[
+&lt;img src="Flipbook_files/figure-html/output_Time-Series_1-1.png" style="display: block; margin: auto;" /&gt;
+]]
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+ggplot(data = Fail_tsbl) + 
+* aes(x = Date_time)
+```
+]]
+.column[.content.center[
+&lt;img src="Flipbook_files/figure-html/output_Time-Series_2-1.png" style="display: block; margin: auto;" /&gt;
+]]
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+ggplot(data = Fail_tsbl) + 
+  aes(x = Date_time) +
+* aes(y = Failures)
+```
+]]
+.column[.content.center[
+&lt;img src="Flipbook_files/figure-html/output_Time-Series_3-1.png" style="display: block; margin: auto;" /&gt;
+]]
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+ggplot(data = Fail_tsbl) + 
+  aes(x = Date_time) +
+  aes(y = Failures) + 
+* geom_line()
+```
+]]
+.column[.content.center[
+&lt;img src="Flipbook_files/figure-html/output_Time-Series_4-1.png" style="display: block; margin: auto;" /&gt;
+]]
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+ggplot(data = Fail_tsbl) + 
+  aes(x = Date_time) +
+  aes(y = Failures) + 
+  geom_line() + 
+* theme_bw()
+```
+]]
+.column[.content.center[
+&lt;img src="Flipbook_files/figure-html/output_Time-Series_5-1.png" style="display: block; margin: auto;" /&gt;
+]]
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+ggplot(data = Fail_tsbl) + 
+  aes(x = Date_time) +
+  aes(y = Failures) + 
+  geom_line() + 
+  theme_bw() + 
+* ggtitle("Number of Failures by Day")
+```
+]]
+.column[.content.center[
+&lt;img src="Flipbook_files/figure-html/output_Time-Series_6-1.png" style="display: block; margin: auto;" /&gt;
+]]
+---
+# Hourly Plots
+
+In time series we often wish to look at hour a time series behaves based on some time incrememnts. This could be a search for seasonality, or additional confounders. We can look at hourly results in two ways, either as a straight line or as polar coordinates. In this case we will look at the former, as it is simpler. Additionally, we will show some of the abilities of the dplyr package with the group_by() and summarise() functions, as well as the labs() function of ggplot.
+
+&lt;img src="Flipbook_files/figure-html/Hourly-1.png" style="display: block; margin: auto;" /&gt;
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+*Fail_tsbl
+```
+]]
+.column[.content.center[
+
+```
+# A tsibble: 22,499 x 4 [1h] &lt;UTC&gt;
+   Date_time           Failures WkDay  Hour
+   &lt;dttm&gt;                 &lt;dbl&gt; &lt;ord&gt; &lt;int&gt;
+ 1 2006-01-03 07:00:00        8 Tue       7
+ 2 2006-01-03 08:00:00        1 Tue       8
+ 3 2006-01-03 09:00:00        3 Tue       9
+ 4 2006-01-03 10:00:00        2 Tue      10
+ 5 2006-01-03 11:00:00        2 Tue      11
+ 6 2006-01-03 12:00:00        3 Tue      12
+ 7 2006-01-03 13:00:00        3 Tue      13
+ 8 2006-01-03 14:00:00        3 Tue      14
+ 9 2006-01-03 15:00:00       10 Tue      15
+10 2006-01-03 16:00:00        1 Tue      16
+# ... with 22,489 more rows
+```
+]]
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+Fail_tsbl %&gt;% 
+* group_by(Hour)
+```
+]]
+.column[.content.center[
+
+```
+# A tsibble: 22,499 x 4 [1h] &lt;UTC&gt;
+# Groups:    Hour [24]
+   Date_time           Failures WkDay  Hour
+   &lt;dttm&gt;                 &lt;dbl&gt; &lt;ord&gt; &lt;int&gt;
+ 1 2006-01-03 07:00:00        8 Tue       7
+ 2 2006-01-03 08:00:00        1 Tue       8
+ 3 2006-01-03 09:00:00        3 Tue       9
+ 4 2006-01-03 10:00:00        2 Tue      10
+ 5 2006-01-03 11:00:00        2 Tue      11
+ 6 2006-01-03 12:00:00        3 Tue      12
+ 7 2006-01-03 13:00:00        3 Tue      13
+ 8 2006-01-03 14:00:00        3 Tue      14
+ 9 2006-01-03 15:00:00       10 Tue      15
+10 2006-01-03 16:00:00        1 Tue      16
+# ... with 22,489 more rows
+```
+]]
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+Fail_tsbl %&gt;% 
+  group_by(Hour) %&gt;% 
+* summarise(Failures = sum(Failures))
+```
+]]
+.column[.content.center[
+
+```
+# A tsibble: 22,499 x 3 [1h] &lt;UTC&gt;
+# Key:       Hour [24]
+    Hour Date_time           Failures
+   &lt;int&gt; &lt;dttm&gt;                 &lt;dbl&gt;
+ 1     0 2006-01-04 00:00:00        2
+ 2     0 2006-01-05 00:00:00        0
+ 3     0 2006-01-06 00:00:00        0
+ 4     0 2006-01-07 00:00:00        2
+ 5     0 2006-01-08 00:00:00        0
+ 6     0 2006-01-09 00:00:00        0
+ 7     0 2006-01-10 00:00:00        0
+ 8     0 2006-01-11 00:00:00        0
+ 9     0 2006-01-12 00:00:00        0
+10     0 2006-01-13 00:00:00        2
+# ... with 22,489 more rows
+```
+]]
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+Fail_tsbl %&gt;% 
+  group_by(Hour) %&gt;% 
+  summarise(Failures = sum(Failures)) %&gt;% 
+* ggplot()
+```
+]]
+.column[.content.center[
+&lt;img src="Flipbook_files/figure-html/output_Hourly_4-1.png" style="display: block; margin: auto;" /&gt;
+]]
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+Fail_tsbl %&gt;% 
+  group_by(Hour) %&gt;% 
+  summarise(Failures = sum(Failures)) %&gt;% 
+  ggplot() + 
+* aes(x = Hour, y = Failures)
+```
+]]
+.column[.content.center[
+&lt;img src="Flipbook_files/figure-html/output_Hourly_5-1.png" style="display: block; margin: auto;" /&gt;
+]]
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+Fail_tsbl %&gt;% 
+  group_by(Hour) %&gt;% 
+  summarise(Failures = sum(Failures)) %&gt;% 
+  ggplot() + 
+  aes(x = Hour, y = Failures) +
+* geom_col()
+```
+]]
+.column[.content.center[
+&lt;img src="Flipbook_files/figure-html/output_Hourly_6-1.png" style="display: block; margin: auto;" /&gt;
+]]
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+Fail_tsbl %&gt;% 
+  group_by(Hour) %&gt;% 
+  summarise(Failures = sum(Failures)) %&gt;% 
+  ggplot() + 
+  aes(x = Hour, y = Failures) +
+  geom_col() + 
+* theme_bw()
+```
+]]
+.column[.content.center[
+&lt;img src="Flipbook_files/figure-html/output_Hourly_7-1.png" style="display: block; margin: auto;" /&gt;
+]]
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+Fail_tsbl %&gt;% 
+  group_by(Hour) %&gt;% 
+  summarise(Failures = sum(Failures)) %&gt;% 
+  ggplot() + 
+  aes(x = Hour, y = Failures) +
+  geom_col() + 
+  theme_bw() + 
+* labs(title = "System Failures by Hour of Day",
+*      x = "Hour")
+```
+]]
+.column[.content.center[
+&lt;img src="Flipbook_files/figure-html/output_Hourly_9-1.png" style="display: block; margin: auto;" /&gt;
+]]
+---
+# Daily Plot
+
+The same process can be done for plots of failures by the weekday.
+
+&lt;img src="Flipbook_files/figure-html/Daily-1.png" style="display: block; margin: auto;" /&gt;
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+*Fail_tsbl
+```
+]]
+.column[.content.center[
+
+```
+# A tsibble: 22,499 x 4 [1h] &lt;UTC&gt;
+   Date_time           Failures WkDay  Hour
+   &lt;dttm&gt;                 &lt;dbl&gt; &lt;ord&gt; &lt;int&gt;
+ 1 2006-01-03 07:00:00        8 Tue       7
+ 2 2006-01-03 08:00:00        1 Tue       8
+ 3 2006-01-03 09:00:00        3 Tue       9
+ 4 2006-01-03 10:00:00        2 Tue      10
+ 5 2006-01-03 11:00:00        2 Tue      11
+ 6 2006-01-03 12:00:00        3 Tue      12
+ 7 2006-01-03 13:00:00        3 Tue      13
+ 8 2006-01-03 14:00:00        3 Tue      14
+ 9 2006-01-03 15:00:00       10 Tue      15
+10 2006-01-03 16:00:00        1 Tue      16
+# ... with 22,489 more rows
+```
+]]
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+Fail_tsbl %&gt;% 
+* group_by(WkDay)
+```
+]]
+.column[.content.center[
+
+```
+# A tsibble: 22,499 x 4 [1h] &lt;UTC&gt;
+# Groups:    WkDay [7]
+   Date_time           Failures WkDay  Hour
+   &lt;dttm&gt;                 &lt;dbl&gt; &lt;ord&gt; &lt;int&gt;
+ 1 2006-01-03 07:00:00        8 Tue       7
+ 2 2006-01-03 08:00:00        1 Tue       8
+ 3 2006-01-03 09:00:00        3 Tue       9
+ 4 2006-01-03 10:00:00        2 Tue      10
+ 5 2006-01-03 11:00:00        2 Tue      11
+ 6 2006-01-03 12:00:00        3 Tue      12
+ 7 2006-01-03 13:00:00        3 Tue      13
+ 8 2006-01-03 14:00:00        3 Tue      14
+ 9 2006-01-03 15:00:00       10 Tue      15
+10 2006-01-03 16:00:00        1 Tue      16
+# ... with 22,489 more rows
+```
+]]
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+Fail_tsbl %&gt;% 
+  group_by(WkDay) %&gt;% 
+* summarise(Failures = sum(Failures))
+```
+]]
+.column[.content.center[
+
+```
+# A tsibble: 22,499 x 3 [1h] &lt;UTC&gt;
+# Key:       WkDay [7]
+   WkDay Date_time           Failures
+   &lt;ord&gt; &lt;dttm&gt;                 &lt;dbl&gt;
+ 1 Sun   2006-01-08 00:00:00        0
+ 2 Sun   2006-01-08 01:00:00        4
+ 3 Sun   2006-01-08 02:00:00        2
+ 4 Sun   2006-01-08 03:00:00        1
+ 5 Sun   2006-01-08 04:00:00        0
+ 6 Sun   2006-01-08 05:00:00        0
+ 7 Sun   2006-01-08 06:00:00        0
+ 8 Sun   2006-01-08 07:00:00        3
+ 9 Sun   2006-01-08 08:00:00        0
+10 Sun   2006-01-08 09:00:00        3
+# ... with 22,489 more rows
+```
+]]
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+Fail_tsbl %&gt;% 
+  group_by(WkDay) %&gt;% 
+  summarise(Failures = sum(Failures)) %&gt;% 
+* ggplot()
+```
+]]
+.column[.content.center[
+&lt;img src="Flipbook_files/figure-html/output_Daily_4-1.png" style="display: block; margin: auto;" /&gt;
+]]
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+Fail_tsbl %&gt;% 
+  group_by(WkDay) %&gt;% 
+  summarise(Failures = sum(Failures)) %&gt;% 
+  ggplot() + 
+* aes(x = WkDay, y = Failures)
+```
+]]
+.column[.content.center[
+&lt;img src="Flipbook_files/figure-html/output_Daily_5-1.png" style="display: block; margin: auto;" /&gt;
+]]
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+Fail_tsbl %&gt;% 
+  group_by(WkDay) %&gt;% 
+  summarise(Failures = sum(Failures)) %&gt;% 
+  ggplot() + 
+  aes(x = WkDay, y = Failures) +
+* geom_col()
+```
+]]
+.column[.content.center[
+&lt;img src="Flipbook_files/figure-html/output_Daily_6-1.png" style="display: block; margin: auto;" /&gt;
+]]
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+Fail_tsbl %&gt;% 
+  group_by(WkDay) %&gt;% 
+  summarise(Failures = sum(Failures)) %&gt;% 
+  ggplot() + 
+  aes(x = WkDay, y = Failures) +
+  geom_col() + 
+* theme_bw()
+```
+]]
+.column[.content.center[
+&lt;img src="Flipbook_files/figure-html/output_Daily_7-1.png" style="display: block; margin: auto;" /&gt;
+]]
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+Fail_tsbl %&gt;% 
+  group_by(WkDay) %&gt;% 
+  summarise(Failures = sum(Failures)) %&gt;% 
+  ggplot() + 
+  aes(x = WkDay, y = Failures) +
+  geom_col() + 
+  theme_bw() + 
+* labs(title = "System Failures by Week Day",
+*      x = "Week Day")
+```
+]]
+.column[.content.center[
+&lt;img src="Flipbook_files/figure-html/output_Daily_9-1.png" style="display: block; margin: auto;" /&gt;
+]]
+---
+# Subseries Plot
+A subseries plot is a tool to check for seasonality or changes in seasonality over time. In this case we look at the change possible change in the number of failures each weekday over time. To do this we separate out every occurance of every weekday into different plot windows, plot the time series, and add a smooth line to approximate the possible change. To create the smooth line we use the ggplot function geom_smooth(), choosing a simple linear model to detect any changes.
+
+&lt;img src="Flipbook_files/figure-html/Subseries-1.png" style="display: block; margin: auto;" /&gt;
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+*ggplot(data = Fail_tsbl)
+```
+]]
+.column[.content.center[
+&lt;img src="Flipbook_files/figure-html/output_Subseries_1-1.png" style="display: block; margin: auto;" /&gt;
+]]
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+ggplot(data = Fail_tsbl) + 
+* aes(x = Date_time, y = Failures)
+```
+]]
+.column[.content.center[
+&lt;img src="Flipbook_files/figure-html/output_Subseries_2-1.png" style="display: block; margin: auto;" /&gt;
+]]
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+ggplot(data = Fail_tsbl) + 
+  aes(x = Date_time, y = Failures) + 
+* geom_line()
+```
+]]
+.column[.content.center[
+&lt;img src="Flipbook_files/figure-html/output_Subseries_3-1.png" style="display: block; margin: auto;" /&gt;
+]]
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+ggplot(data = Fail_tsbl) + 
+  aes(x = Date_time, y = Failures) + 
+  geom_line() + 
+* geom_smooth(method = 'lm', se = FALSE)
+```
+]]
+.column[.content.center[
+&lt;img src="Flipbook_files/figure-html/output_Subseries_4-1.png" style="display: block; margin: auto;" /&gt;
+]]
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+ggplot(data = Fail_tsbl) + 
+  aes(x = Date_time, y = Failures) + 
+  geom_line() + 
+  geom_smooth(method = 'lm', se = FALSE) +
+* facet_grid(~WkDay)
+```
+]]
+.column[.content.center[
+&lt;img src="Flipbook_files/figure-html/output_Subseries_5-1.png" style="display: block; margin: auto;" /&gt;
+]]
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+ggplot(data = Fail_tsbl) + 
+  aes(x = Date_time, y = Failures) + 
+  geom_line() + 
+  geom_smooth(method = 'lm', se = FALSE) +
+  facet_grid(~WkDay) + 
+* theme_bw()
+```
+]]
+.column[.content.center[
+&lt;img src="Flipbook_files/figure-html/output_Subseries_6-1.png" style="display: block; margin: auto;" /&gt;
+]]
+---
+class: split-40
+count: false
+
+.column[.content[
+
+```r
+ggplot(data = Fail_tsbl) + 
+  aes(x = Date_time, y = Failures) + 
+  geom_line() + 
+  geom_smooth(method = 'lm', se = FALSE) +
+  facet_grid(~WkDay) + 
+  theme_bw() + 
+* labs(title = "Subseries Plot for Failure Data",
+*      x = "Time")
+```
+]]
+.column[.content.center[
+&lt;img src="Flipbook_files/figure-html/output_Subseries_8-1.png" style="display: block; margin: auto;" /&gt;
+]]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "20:10",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

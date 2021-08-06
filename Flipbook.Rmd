@@ -1,0 +1,119 @@
+---
+title: "Creating Time Series Plots in ggPlot2"
+subtitle: "A Flipbook"
+author: "Andrew Fraijo"
+Company: "CVP"
+date: "2019/7/1 (updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css: ["shinobi","ninjutsu"]
+    nature:
+      ratio: "20:10"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.width = 10, message = F, warning = F, 
+                      comment = "", cache = F, fig.align = "center")
+options(tibble.print_max = 20) 
+source(file = "xaringan_reveal_parenthetical.R")
+```
+# Introduction
+
+The R package ggplot2 is an implementation of the "layered grammar of graphics", orginally proposed by Leland Wilkinson in 2005 and implemented by Hadley Wickham. Hadley, the folks at RStudio, and the wider R community, continue to develop ggplot2 (in the R community if you use the name Hadley, the default presumption is you mean Hadley Wickham. He is kind of a big deal). Originally intended to create create graphics that were ready to be published in statistical journals, ggplot2 is widely used by the R community. In Python the packages ggplot and plotnine are direct ports of ggplot2. 
+
+The structure of creating a ggplot figure is not always easy to understand, particularly when plotting time-series. In this flipbook, I will walk you through creating a variety of time-series plots using ggplot2.
+
+---
+# Acknowledgement
+
+Most of this was built off of work provided by Gina Reynolds. You can find her Flipbook library and code here: https://github.com/EvaMaeRey/little_flipbooks_library.
+
+---
+#Data and Packages
+
+We will be using data that represents the number of server failures per hour over a 3 year period. In addition to ggplot2, we use the tools of the Tidyverse, created by Hadley Wickham (he's very busy) to encourage tidy data analysis, and the tidy time-series package tsibble. 
+
+```{r eval=TRUE, tidy=TRUE}
+library(tidyverse)
+library(tsibble)
+library(readr)
+Fail_tsbl <- read_rds("Data For Flipbook.RDS")
+```
+
+---
+# Data and Packages
+
+Below is the first 10 observations from the dataset. You can see that the data includes a time-stamp, the number of failures at that time, the Weekday, and the hour of the day. The last two variables are useful for certain graphs we will create:
+```{r, echo = FALSE}
+knitr::kable(head(Fail_tsbl, 10), format = "html")
+```
+---
+# Straight Forward Time-Series
+
+Our first plot will be a straight forward time-series plot, where one line connects each data point. The output we are aiming for is:
+
+```{r Time-Series, eval=TRUE, echo=FALSE}
+ggplot(data = Fail_tsbl) + 
+  aes(x = Date_time) +
+  aes(y = Failures) + 
+  geom_line() + 
+  theme_bw() + 
+  ggtitle("Number of Failures by Day")
+```
+---
+`r apply_reveal("Time-Series")`
+---
+# Hourly Plots
+
+In time series we often wish to look at hour a time series behaves based on some time incrememnts. This could be a search for seasonality, or additional confounders. We can look at hourly results in two ways, either as a straight line or as polar coordinates. In this case we will look at the former, as it is simpler. Additionally, we will show some of the abilities of the dplyr package with the group_by() and summarise() functions, as well as the labs() function of ggplot.
+
+``` {r Hourly, eval = TRUE, echo = FALSE}
+Fail_tsbl %>% 
+  group_by(Hour) %>% 
+  summarise(Failures = sum(Failures)) %>% 
+  ggplot() + 
+  aes(x = Hour, y = Failures) +
+  geom_col() + 
+  theme_bw() + 
+  labs(title = "System Failures by Hour of Day",
+       x = "Hour")
+```
+---
+`r apply_reveal("Hourly")`
+---
+# Daily Plot
+
+The same process can be done for plots of failures by the weekday.
+
+```{r Daily, eval = TRUE, echo = FALSE}
+Fail_tsbl %>% 
+  group_by(WkDay) %>% 
+  summarise(Failures = sum(Failures)) %>% 
+  ggplot() + 
+  aes(x = WkDay, y = Failures) +
+  geom_col() + 
+  theme_bw() + 
+  labs(title = "System Failures by Week Day",
+       x = "Week Day")
+```
+---
+`r apply_reveal("Daily")`
+---
+# Subseries Plot
+A subseries plot is a tool to check for seasonality or changes in seasonality over time. In this case we look at the change possible change in the number of failures each weekday over time. To do this we separate out every occurance of every weekday into different plot windows, plot the time series, and add a smooth line to approximate the possible change. To create the smooth line we use the ggplot function geom_smooth(), choosing a simple linear model to detect any changes.
+
+```{r Subseries, eval = TRUE, echo = FALSE}
+ggplot(data = Fail_tsbl) + 
+  aes(x = Date_time, y = Failures) + 
+  geom_line() + 
+  geom_smooth(method = 'lm', se = FALSE) +
+  facet_grid(~WkDay) + 
+  theme_bw() + 
+  labs(title = "Subseries Plot for Failure Data",
+       x = "Time")
+```
+---
+`r apply_reveal("Subseries")`

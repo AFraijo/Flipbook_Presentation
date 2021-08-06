@@ -1,2 +1,3 @@
-# Flipbook_Presentation
-Code to demonstrate Flipbook for data visualization, created for corporate lunch and learn
+# Time Series Flipbook
+
+A flipbook on how to create time-series plots in ggplot2
